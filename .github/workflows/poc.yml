@@ -1,0 +1,30 @@
+name: PoC Vulnerable Workflow
+
+on:
+  workflow_dispatch:   # run manually from Actions tab
+  push:
+    branches:
+      - main           # runs when you push to main
+
+jobs:
+  poc:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Clone gh-pages branch
+        run: |
+          git clone -q -b gh-pages "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git" gh-pages
+          cd gh-pages
+          chmod +x updaterelease.sh
+
+          echo ">>> Running untrusted script from gh-pages..."
+          ./updaterelease.sh snapshot
+
+          echo ">>> Contents of proof.txt after execution:"
+          cat proof.txt
+
+          git push -fq origin gh-pages
